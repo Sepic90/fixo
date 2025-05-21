@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import TechnicalDataForm from '../components/technical/TechnicalDataForm';
+import TechnicalDataView from '../components/technical/TechnicalDataView';
 import BackButton from '../components/layout/BackButton';
 import { useCars } from '../hooks/useCars';
+import { PencilIcon } from '@heroicons/react/24/outline';
 
 const TechnicalDataPage = () => {
   const { carId } = useParams();
@@ -14,6 +16,7 @@ const TechnicalDataPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   
   // Fetch car details
   useEffect(() => {
@@ -56,6 +59,7 @@ const TechnicalDataPage = () => {
         console.log('Car updated successfully:', result);
         setCar(result);
         setSuccessMessage('Technical data saved successfully!');
+        setIsEditing(false);
         
         // Clear success message after 3 seconds
         setTimeout(() => {
@@ -114,24 +118,24 @@ const TechnicalDataPage = () => {
       <BackButton />
       
       <div className="mb-6 relative">
-        {car.imageUrl && (
-          <div className="h-48 rounded-t-lg overflow-hidden">
-            <img 
-              src={car.imageUrl} 
-              alt={car.name} 
-              className="w-full h-full object-cover opacity-70"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-primary-600/50 to-secondary-600/70 rounded-t-lg"></div>
-          </div>
-        )}
-        
-        <div className={`px-4 py-5 sm:px-6 ${car.imageUrl ? 'absolute inset-x-0 bottom-0 text-white' : 'bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-t-lg'}`}>
-          <h2 className="text-xl font-medium">Technical Data</h2>
-          <p className="mt-1 text-sm opacity-90">
-            {car.name} - {car.description}
-          </p>
-        </div>
-      </div>
+	    {car.imageUrl && (
+		  <div className="h-48 rounded-t-lg overflow-hidden">
+		    <img 
+			  src={car.imageUrl} 
+			  alt={car.name} 
+			  className="w-full h-full object-cover opacity-70"
+		    />
+		    <div className="absolute inset-0 bg-primary-500/70 rounded-t-lg"></div>
+		  </div>
+	    )}
+	  
+	    <div className={`px-4 py-5 sm:px-6 ${car.imageUrl ? 'absolute inset-x-0 bottom-0 text-white' : 'bg-primary-500 text-white rounded-t-lg'}`}>
+		  <h2 className="text-xl font-medium">Technical Data</h2>
+		  <p className="mt-1 text-sm opacity-90">
+		    {car.name} - {car.description}
+		  </p>
+	    </div>
+	  </div>
       
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
@@ -157,11 +161,26 @@ const TechnicalDataPage = () => {
         </div>
       )}
       
-      <TechnicalDataForm 
-        car={car}
-        onSave={handleSave}
-        isLoading={saving}
-      />
+      {isEditing ? (
+        <TechnicalDataForm 
+          car={car}
+          onSave={handleSave}
+          isLoading={saving}
+        />
+      ) : (
+        <div>
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="btn btn-primary flex items-center space-x-2"
+            >
+              <PencilIcon className="h-5 w-5" />
+              <span>Edit Technical Data</span>
+            </button>
+          </div>
+          <TechnicalDataView car={car} />
+        </div>
+      )}
     </div>
   );
 };

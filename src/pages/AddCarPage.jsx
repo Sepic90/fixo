@@ -33,7 +33,7 @@ const AddCarPage = () => {
       <BackButton />
       
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-4 py-5 sm:px-6 bg-gradient-to-r from-primary-600 to-secondary-600">
+        <div className="px-4 py-5 sm:px-6 bg-primary-500">
           <h2 className="text-xl font-medium text-white">Add New Car</h2>
           <p className="mt-1 text-sm text-white opacity-90">
             Enter your car's details to add it to your garage.

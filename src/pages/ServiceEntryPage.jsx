@@ -108,24 +108,24 @@ const ServiceEntryPage = () => {
       
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="relative">
-          {car.imageUrl && (
-            <div className="h-48 overflow-hidden">
-              <img 
-                src={car.imageUrl} 
-                alt={car.name} 
-                className="w-full h-full object-cover opacity-40"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-primary-600/80 to-secondary-600/80"></div>
-            </div>
-          )}
-          
-          <div className={`px-4 py-5 sm:px-6 ${car.imageUrl ? 'absolute inset-x-0 bottom-0 text-white' : 'bg-gradient-to-r from-primary-600 to-secondary-600 text-white'}`}>
-            <h2 className="text-xl font-medium">New Service Entry</h2>
-            <p className="mt-1 text-sm opacity-90">
-              {car.name} - {car.description}
-            </p>
-          </div>
-        </div>
+		  {car.imageUrl && (
+			<div className="h-48 overflow-hidden">
+			  <img 
+				src={car.imageUrl} 
+				alt={car.name} 
+				className="w-full h-full object-cover opacity-40"
+			  />
+			  <div className="absolute inset-0 bg-primary-500/80"></div>
+			</div>
+		  )}
+		  
+		  <div className={`px-4 py-5 sm:px-6 ${car.imageUrl ? 'absolute inset-x-0 bottom-0 text-white' : 'bg-primary-500 text-white'}`}>
+			<h2 className="text-xl font-medium">New Service Entry</h2>
+			<p className="mt-1 text-sm opacity-90">
+			  {car.name} - {car.description}
+			</p>
+		  </div>
+		</div>
         
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 p-4 m-4">

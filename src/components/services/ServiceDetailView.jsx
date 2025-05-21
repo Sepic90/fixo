@@ -23,7 +23,7 @@ const ServiceDetailView = ({ service, onDeleteImage }) => {
   
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="px-4 py-5 sm:px-6 bg-gradient-to-r from-primary-600 to-secondary-600">
+      <div className="px-4 py-5 sm:px-6 bg-primary-500">
         <h3 className="text-lg leading-6 font-medium text-white">
           {service.description}
         </h3>

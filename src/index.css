@@ -8,11 +8,11 @@
   }
   
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 focus:ring-primary-500;
+    @apply bg-secondary-300 text-gray-900 hover:bg-secondary-400 focus:ring-secondary-300;
   }
   
   .btn-secondary {
-    @apply bg-gradient-to-r from-secondary-500 to-secondary-600 text-white hover:from-secondary-600 hover:to-secondary-700 focus:ring-secondary-500;
+    @apply bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500;
   }
   
   .btn-outline {
@@ -34,10 +34,7 @@
   .form-group {
     @apply mb-4;
   }
-  
-  .gradient-bg {
-    @apply bg-gradient-to-br from-primary-500 to-secondary-500;
-  }
+
 }
 
 body {
