@@ -20,16 +20,20 @@ const ServiceEntryPage = () => {
   // Fetch car details
   useEffect(() => {
     const loadCar = async () => {
+      console.log('Loading car with ID:', carId);
       try {
         setCarLoading(true);
         const carData = await fetchCarById(carId);
+        console.log('Car data returned:', carData);
         
         if (!carData) {
+          console.error('Car not found for ID:', carId);
           throw new Error('Car not found');
         }
         
         setCar(carData);
       } catch (err) {
+        console.error('Error loading car:', err.message);
         setError(err.message);
       } finally {
         setCarLoading(false);
@@ -44,12 +48,15 @@ const ServiceEntryPage = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Submitting service data:', serviceData);
       const newService = await createServiceEntry(serviceData, imageFiles);
+      console.log('New service created:', newService);
       
       if (newService) {
         navigate(`/car/${carId}/service/history`);
       }
     } catch (err) {
+      console.error('Error creating service entry:', err.message);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -60,16 +67,35 @@ const ServiceEntryPage = () => {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <p className="ml-2 text-gray-600">Loading car...</p>
+      </div>
+    );
+  }
+  
+  if (error && !car) {
+    return (
+      <div>
+        <BackButton to={`/`} label="Back to Cars" />
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <span className="text-red-500">Error: {error}</span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
   
   if (!car) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <span className="text-red-500">Car not found</span>
+      <div>
+        <BackButton to={`/`} label="Back to Cars" />
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <span className="text-red-500">Car not found</span>
+            </div>
           </div>
         </div>
       </div>

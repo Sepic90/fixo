@@ -19,16 +19,20 @@ const ServiceHistoryPage = () => {
   // Fetch car details
   useEffect(() => {
     const loadCar = async () => {
+      console.log('Loading car with ID:', carId);
       try {
         setLoading(true);
         const carData = await fetchCarById(carId);
+        console.log('Car data returned:', carData);
         
         if (!carData) {
+          console.error('Car not found for ID:', carId);
           throw new Error('Car not found');
         }
         
         setCar(carData);
       } catch (err) {
+        console.error('Error loading car:', err.message);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -42,16 +46,22 @@ const ServiceHistoryPage = () => {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <p className="ml-2 text-gray-600">
+          {loading ? 'Loading car information...' : 'Loading service entries...'}
+        </p>
       </div>
     );
   }
   
   if (error || entriesError) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <span className="text-red-500">{error || entriesError}</span>
+      <div>
+        <BackButton to={`/`} label="Back to Cars" />
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <span className="text-red-500">Error: {error || entriesError}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -60,10 +70,13 @@ const ServiceHistoryPage = () => {
   
   if (!car) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <span className="text-red-500">Car not found</span>
+      <div>
+        <BackButton to={`/`} label="Back to Cars" />
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <span className="text-red-500">Car not found</span>
+            </div>
           </div>
         </div>
       </div>
@@ -98,7 +111,7 @@ const ServiceHistoryPage = () => {
         <div className="px-4 py-4 sm:px-6 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-gray-700">
-              Total Service Entries: <span className="font-bold">{serviceEntries.length}</span>
+              Total Service Entries: <span className="font-bold">{serviceEntries ? serviceEntries.length : 0}</span>
             </p>
             <Link
               to={`/car/${carId}/service/new`}
@@ -112,7 +125,7 @@ const ServiceHistoryPage = () => {
         
         <div>
           <ServiceHistoryList 
-            serviceEntries={serviceEntries} 
+            serviceEntries={serviceEntries || []} 
             carId={carId} 
           />
         </div>

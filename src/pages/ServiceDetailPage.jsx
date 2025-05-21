@@ -5,17 +5,12 @@ import { TrashIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import ServiceDetailView from '../components/services/ServiceDetailView';
 import BackButton from '../components/layout/BackButton';
 import { useCars } from '../hooks/useCars';
-import { useServiceEntries } from '../hooks/useServiceEntries';
+import { getServiceEntryById, deleteServiceEntry, deleteServiceEntryImage } from '../firebase/serviceEntryService';
 
 const ServiceDetailPage = () => {
   const { carId, serviceId } = useParams();
   const navigate = useNavigate();
   const { fetchCarById } = useCars();
-  const { 
-    fetchServiceEntryById, 
-    removeServiceEntry, 
-    removeServiceEntryImage 
-  } = useServiceEntries(carId);
   
   const [car, setCar] = useState(null);
   const [service, setService] = useState(null);
@@ -26,23 +21,38 @@ const ServiceDetailPage = () => {
   // Fetch car and service details
   useEffect(() => {
     const loadData = async () => {
+      console.log('Loading service details for car ID:', carId, 'service ID:', serviceId);
       try {
         setLoading(true);
         
         // Load car details
+        console.log('Fetching car data...');
         const carData = await fetchCarById(carId);
+        console.log('Car data returned:', carData);
+        
         if (!carData) {
+          console.error('Car not found for ID:', carId);
           throw new Error('Car not found');
         }
         setCar(carData);
         
-        // Load service entry details
-        const serviceData = await fetchServiceEntryById(serviceId);
-        if (!serviceData) {
-          throw new Error('Service entry not found');
+        // Load service entry details - using direct import instead of hook
+        console.log('Fetching service entry data...');
+        try {
+          const serviceData = await getServiceEntryById(serviceId);
+          console.log('Service data returned:', serviceData);
+          
+          if (!serviceData) {
+            console.error('Service entry not found for ID:', serviceId);
+            throw new Error('Service entry not found');
+          }
+          setService(serviceData);
+        } catch (serviceError) {
+          console.error('Error fetching service:', serviceError);
+          throw serviceError;
         }
-        setService(serviceData);
       } catch (err) {
+        console.error('Error loading data:', err.message);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -50,7 +60,7 @@ const ServiceDetailPage = () => {
     };
     
     loadData();
-  }, [carId, serviceId, fetchCarById, fetchServiceEntryById]);
+  }, [carId, serviceId, fetchCarById]);
   
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this service entry? This action cannot be undone.')) {
@@ -59,52 +69,58 @@ const ServiceDetailPage = () => {
     
     try {
       setDeleteLoading(true);
-      const result = await removeServiceEntry(serviceId);
-      
-      if (result.success) {
-        navigate(`/car/${carId}/service/history`);
-      } else {
-        throw new Error(result.error || 'Failed to delete service entry');
-      }
+      console.log('Deleting service entry:', serviceId);
+      await deleteServiceEntry(serviceId);
+      console.log('Service entry deleted successfully');
+      navigate(`/car/${carId}/service/history`);
     } catch (err) {
+      console.error('Error deleting service entry:', err.message);
       setError(err.message);
-    } finally {
       setDeleteLoading(false);
     }
   };
   
   const handleDeleteImage = async (imageUrl) => {
     try {
-      const result = await removeServiceEntryImage(serviceId, imageUrl);
+      console.log('Deleting image:', imageUrl, 'from service:', serviceId);
+      const result = await deleteServiceEntryImage(serviceId, imageUrl);
+      console.log('Image delete result:', result);
       
-      if (result.success) {
-        // Update the local state to reflect the deleted image
-        setService(prev => ({
-          ...prev,
-          imageUrls: prev.imageUrls.filter(url => url !== imageUrl)
-        }));
-      } else {
-        throw new Error(result.error || 'Failed to delete image');
-      }
+      // Update the local state to reflect the deleted image
+      setService(prev => ({
+        ...prev,
+        imageUrls: prev.imageUrls.filter(url => url !== imageUrl)
+      }));
     } catch (err) {
+      console.error('Error deleting image:', err.message);
       setError(err.message);
     }
   };
   
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      <div className="flex flex-col justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-2"></div>
+        <p className="text-gray-600">Loading service details...</p>
+        <p className="text-sm text-gray-500">Car ID: {carId}, Service ID: {serviceId}</p>
       </div>
     );
   }
   
   if (error) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
+      <div>
+        <BackButton to={`/car/${carId}/service/history`} label="Back to Service History" />
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex flex-col">
+            <span className="text-red-700 font-medium">Error loading service details</span>
             <span className="text-red-500">{error}</span>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-2 btn btn-outline text-sm"
+            >
+              Try Again
+            </button>
           </div>
         </div>
       </div>
@@ -113,10 +129,24 @@ const ServiceDetailPage = () => {
   
   if (!car || !service) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <span className="text-red-500">Data not found</span>
+      <div>
+        <BackButton to={`/car/${carId}/service/history`} label="Back to Service History" />
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex flex-col">
+            <span className="text-red-700 font-medium">
+              {!car ? 'Car not found' : 'Service entry not found'}
+            </span>
+            <span className="text-red-500">
+              The requested {!car ? 'car' : 'service entry'} could not be found in the database.
+            </span>
+            <div className="mt-2">
+              <button 
+                onClick={() => navigate(`/car/${carId}/service/history`)}
+                className="btn btn-primary text-sm"
+              >
+                Go to Service History
+              </button>
+            </div>
           </div>
         </div>
       </div>

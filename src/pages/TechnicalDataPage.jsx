@@ -18,16 +18,20 @@ const TechnicalDataPage = () => {
   // Fetch car details
   useEffect(() => {
     const loadCar = async () => {
+      console.log('Loading car with ID:', carId);
       try {
         setLoading(true);
         const carData = await fetchCarById(carId);
+        console.log('Car data returned:', carData);
         
         if (!carData) {
+          console.error('Car not found for ID:', carId);
           throw new Error('Car not found');
         }
         
         setCar(carData);
       } catch (err) {
+        console.error('Error loading car:', err.message);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -43,10 +47,13 @@ const TechnicalDataPage = () => {
       setError(null);
       setSuccessMessage(null);
       
+      console.log('Updating car with data:', updatedData);
+      
       // Since we're only updating technical data, we don't need to handle image upload
       const result = await editCar(carId, updatedData);
       
       if (result) {
+        console.log('Car updated successfully:', result);
         setCar(result);
         setSuccessMessage('Technical data saved successfully!');
         
@@ -56,6 +63,7 @@ const TechnicalDataPage = () => {
         }, 3000);
       }
     } catch (err) {
+      console.error('Error updating car:', err.message);
       setError(err.message);
     } finally {
       setSaving(false);
@@ -66,16 +74,20 @@ const TechnicalDataPage = () => {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <p className="ml-2 text-gray-600">Loading car data...</p>
       </div>
     );
   }
   
   if (error && !car) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <span className="text-red-500">{error}</span>
+      <div>
+        <BackButton to={`/`} label="Back to Cars" />
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <span className="text-red-500">Error: {error}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -84,10 +96,13 @@ const TechnicalDataPage = () => {
   
   if (!car) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <span className="text-red-500">Car not found</span>
+      <div>
+        <BackButton to={`/`} label="Back to Cars" />
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <span className="text-red-500">Car not found</span>
+            </div>
           </div>
         </div>
       </div>
