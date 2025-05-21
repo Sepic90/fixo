@@ -10,8 +10,8 @@ import {
   query, 
   orderBy 
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from './config';
+import { db } from './config';
+import { uploadImage } from '../services/cloudinaryService';
 
 const CARS_COLLECTION = 'cars';
 
@@ -50,13 +50,11 @@ export const getCarById = async (carId) => {
 // Add a new car
 export const addCar = async (carData, imageFile) => {
   try {
-    // Upload the image first if provided
+    // Upload the image to Cloudinary if provided
     let imageUrl = null;
     
     if (imageFile) {
-      const storageRef = ref(storage, `cars/${Date.now()}_${imageFile.name}`);
-      const snapshot = await uploadBytes(storageRef, imageFile);
-      imageUrl = await getDownloadURL(snapshot.ref);
+      imageUrl = await uploadImage(imageFile, 'cars');
     }
     
     // Add the car document with the image URL
@@ -91,22 +89,10 @@ export const updateCar = async (carId, carData, imageFile) => {
     const currentData = carDoc.data();
     let imageUrl = currentData.imageUrl;
     
-    // If a new image is provided, upload it and update the URL
+    // If a new image is provided, upload it to Cloudinary
     if (imageFile) {
-      // Delete the old image if it exists
-      if (currentData.imageUrl) {
-        try {
-          const oldImageRef = ref(storage, currentData.imageUrl);
-          await deleteObject(oldImageRef);
-        } catch (err) {
-          console.warn('Could not delete old image:', err);
-        }
-      }
-      
-      // Upload the new image
-      const storageRef = ref(storage, `cars/${Date.now()}_${imageFile.name}`);
-      const snapshot = await uploadBytes(storageRef, imageFile);
-      imageUrl = await getDownloadURL(snapshot.ref);
+      // We can't delete the old image with the free plan, but we can upload a new one
+      imageUrl = await uploadImage(imageFile, 'cars');
     }
     
     // Update the car document
@@ -136,18 +122,6 @@ export const deleteCar = async (carId) => {
     
     if (!carDoc.exists()) {
       throw new Error('Car not found');
-    }
-    
-    const carData = carDoc.data();
-    
-    // Delete the image if it exists
-    if (carData.imageUrl) {
-      try {
-        const imageRef = ref(storage, carData.imageUrl);
-        await deleteObject(imageRef);
-      } catch (err) {
-        console.warn('Could not delete image:', err);
-      }
     }
     
     // Delete the car document

@@ -1,32 +1,84 @@
 // src/components/technical/TechnicalDataForm.jsx
 import { useState, useEffect } from 'react';
-import { format, differenceInYears } from 'date-fns';
+import { format, differenceInYears, isValid } from 'date-fns';
 
 const TechnicalDataForm = ({ car, onSave, isLoading }) => {
   const [technicalData, setTechnicalData] = useState({
     name: '',
     description: '',
-    registrationDate: format(new Date(), 'yyyy-MM'),
+    registrationDate: '',
     registrationNumber: '',
     engineCode: '',
     horsePower: '',
     fuelConsumption: '',
     colorName: '',
     colorCode: '',
-    nextInspectionDate: format(new Date(), 'yyyy-MM-dd'),
+    nextInspectionDate: '',
     vinNumber: '',
   });
+  
+  console.log('TechnicalDataForm - car data:', car);
+  
+  // Helper function to safely format dates
+  const safeFormatDate = (date, formatStr, defaultValue = '') => {
+    console.log('Attempting to format date:', date, 'with format:', formatStr);
+    
+    if (!date) {
+      console.log('Date is null/undefined, returning default value');
+      return defaultValue;
+    }
+    
+    // If it's a Firestore timestamp
+    if (date && typeof date.toDate === 'function') {
+      const jsDate = date.toDate();
+      console.log('Converted Firestore timestamp to JS Date:', jsDate);
+      
+      if (isValid(jsDate)) {
+        return format(jsDate, formatStr);
+      } else {
+        console.warn('Invalid date after timestamp conversion');
+        return defaultValue;
+      }
+    }
+    
+    // If it's already a Date object
+    if (date instanceof Date) {
+      if (isValid(date)) {
+        return format(date, formatStr);
+      } else {
+        console.warn('Invalid Date object');
+        return defaultValue;
+      }
+    }
+    
+    // Try to create a valid date from the input
+    try {
+      const parsedDate = new Date(date);
+      if (isValid(parsedDate)) {
+        return format(parsedDate, formatStr);
+      } else {
+        console.warn('Invalid date after parsing');
+        return defaultValue;
+      }
+    } catch (err) {
+      console.error('Error formatting date:', err);
+      return defaultValue;
+    }
+  };
   
   // Initialize form with car data
   useEffect(() => {
     if (car) {
-      // Format the dates for the form inputs
+      console.log('Initializing form with car data');
+      
+      // Format the dates for the form inputs, with fallbacks if dates are invalid
       const formattedData = {
         ...car,
-        registrationDate: car.registrationDate ? format(new Date(car.registrationDate), 'yyyy-MM') : '',
-        nextInspectionDate: car.nextInspectionDate ? format(new Date(car.nextInspectionDate), 'yyyy-MM-dd') : ''
+        registrationDate: car.registrationDate ? safeFormatDate(car.registrationDate, 'yyyy-MM', '') : '',
+        nextInspectionDate: car.nextInspectionDate ? safeFormatDate(car.nextInspectionDate, 'yyyy-MM-dd', '') : ''
       };
       
+      console.log('Formatted car data for form:', formattedData);
       setTechnicalData(formattedData);
     }
   }, [car]);
@@ -36,9 +88,16 @@ const TechnicalDataForm = ({ car, onSave, isLoading }) => {
     if (!technicalData.registrationDate) return '';
     
     try {
-      const regDate = new Date(technicalData.registrationDate);
+      // Add a day to ensure it's a valid date (for month inputs, which don't include a day)
+      const regDate = new Date(technicalData.registrationDate + '-01');
+      if (!isValid(regDate)) {
+        console.warn('Invalid registration date for age calculation:', technicalData.registrationDate);
+        return '';
+      }
+      
       return differenceInYears(new Date(), regDate);
     } catch (error) {
+      console.error('Error calculating age:', error);
       return '';
     }
   };
@@ -51,14 +110,46 @@ const TechnicalDataForm = ({ car, onSave, isLoading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Convert form dates to Date objects
+    // Prepare date fields for submission
+    let registrationDate = null;
+    if (technicalData.registrationDate) {
+      try {
+        // Add day component for proper date creation
+        registrationDate = new Date(technicalData.registrationDate + '-01');
+        if (!isValid(registrationDate)) {
+          console.warn('Created invalid registration date:', registrationDate);
+          registrationDate = null;
+        }
+      } catch (err) {
+        console.error('Error creating registration date:', err);
+      }
+    }
+    
+    let nextInspectionDate = null;
+    if (technicalData.nextInspectionDate) {
+      try {
+        nextInspectionDate = new Date(technicalData.nextInspectionDate);
+        if (!isValid(nextInspectionDate)) {
+          console.warn('Created invalid next inspection date:', nextInspectionDate);
+          nextInspectionDate = null;
+        }
+      } catch (err) {
+        console.error('Error creating next inspection date:', err);
+      }
+    }
+    
+    // Convert form dates to Date objects with validation
     const formattedData = {
       ...technicalData,
-      registrationDate: technicalData.registrationDate ? new Date(technicalData.registrationDate + '-01') : null,
-      nextInspectionDate: technicalData.nextInspectionDate ? new Date(technicalData.nextInspectionDate) : null,
+      registrationDate: registrationDate,
+      nextInspectionDate: nextInspectionDate,
       age: calculateAge(),
+      // Convert string number fields to actual numbers
+      horsePower: technicalData.horsePower ? Number(technicalData.horsePower) : null,
+      fuelConsumption: technicalData.fuelConsumption ? Number(technicalData.fuelConsumption) : null,
     };
     
+    console.log('Submitting formatted data:', formattedData);
     onSave(formattedData);
   };
   

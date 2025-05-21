@@ -1,9 +1,8 @@
-# Create the tailwind.config.js file manually
-echo "/** @type {import('tailwindcss').Config} */
-export default {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -38,4 +37,4 @@ export default {
     },
   },
   plugins: [],
-}" > tailwind.config.js
+}
